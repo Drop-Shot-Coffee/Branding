@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drop Shot Coffee — Brand Strategy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --court:#2f5d50; --court-deep:#1f3f37; --court-line:#3c6b5d;
+    --clay:#c75d3c; --clay-soft:#e08a5f;
+    --cream:#f4efe6; --cream-warm:#ece4d6; --paper:#fbf8f2;
+    --ink:#23211d; --ink-soft:#5b574e; --line:#d8cfbf;
+    --gold:#d9a441;
+    --tarek:#2f5d50; --karim:#c75d3c; --agreed:#7a6a3f;
+    --ok:#3f7d5f; --shadow:0 1px 3px rgba(35,33,29,.08),0 6px 24px rgba(35,33,29,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--cream);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  .hidden{display:none !important}
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(120% 80% at 80% -10%,rgba(217,164,65,.16),transparent 60%),linear-gradient(160deg,var(--court),var(--court-deep))}
+  .login-card{background:var(--paper);border-radius:18px;padding:42px 38px;width:min(420px,92vw);box-shadow:var(--shadow)}
+  .login-card .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--clay);margin-bottom:12px}
+  .login-card h1{font-family:'Fraunces',serif;font-weight:600;font-size:27px;color:var(--court-deep);letter-spacing:-.01em;margin-bottom:6px}
+  .login-card p{font-size:14px;color:var(--ink-soft);margin-bottom:26px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:12px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+  .field input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;color:var(--ink)}
+  .field input:focus{outline:2px solid var(--court);outline-offset:1px;border-color:transparent}
+  .btn-primary{width:100%;background:var(--court);color:var(--cream);border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:600;transition:background .15s}
+  .btn-primary:hover{background:var(--court-deep)}
+  .login-err{color:#b03a2e;font-size:13.5px;margin-top:14px;min-height:18px}
+  #app{min-height:100vh;display:flex;flex-direction:column}
+  .topbar{background:var(--court-deep);color:var(--cream);padding:0 26px;display:flex;align-items:center;justify-content:space-between;height:62px;position:sticky;top:0;z-index:40}
+  .topbar .brand{font-family:'Fraunces',serif;font-weight:600;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center;gap:11px}
+  .topbar .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(217,164,65,.2)}
+  .topbar .right{display:flex;align-items:center;gap:18px}
+  .whoami{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.04em;color:rgba(244,239,230,.78);display:flex;align-items:center;gap:8px}
+  .whoami .badge{width:10px;height:10px;border-radius:50%}
+  .signout{background:transparent;border:1px solid rgba(244,239,230,.3);color:var(--cream);padding:6px 13px;border-radius:8px;font-size:12.5px;font-weight:500}
+  .signout:hover{background:rgba(244,239,230,.1)}
+  .tabbar{background:var(--court);border-bottom:1px solid var(--court-line);padding:0 18px;display:flex;gap:2px;overflow-x:auto;position:sticky;top:62px;z-index:30}
+  .tab{background:transparent;border:none;color:rgba(244,239,230,.62);padding:14px 18px;font-size:13.5px;font-weight:600;letter-spacing:.02em;border-bottom:3px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .tab .n{font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.7}
+  .tab:hover{color:var(--cream)}
+  .tab.active{color:var(--cream);border-bottom-color:var(--gold)}
+  .tab.stub{opacity:.5}.tab.locked{opacity:.4;cursor:not-allowed}
+  .tab .pill{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;background:rgba(244,239,230,.14);padding:2px 6px;border-radius:10px}
+  main{flex:1;max-width:1080px;width:100%;margin:0 auto;padding:34px 26px 90px}
+  .tabhead{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:8px;flex-wrap:wrap}
+  .tabhead .label{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--clay);margin-bottom:10px;display:flex;align-items:center;gap:11px}
+  .tabhead .label::before{content:"";width:24px;height:2px;background:var(--clay)}
+  .tabhead h2{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(25px,3.4vw,32px);color:var(--court-deep);letter-spacing:-.015em;line-height:1.1}
+  .tabhead .intro{font-size:15.5px;color:var(--ink-soft);max-width:62ch;margin-top:12px}
+  .exports{display:flex;gap:8px;flex-shrink:0;align-items:center}
+  .exp-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);margin-right:2px}
+  .exp-btn{background:var(--paper);border:1px solid var(--line);color:var(--court-deep);padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;letter-spacing:.03em;display:inline-flex;align-items:center;gap:6px}
+  .exp-btn:hover{background:#fff;border-color:var(--court)}
+  .exp-btn.global{background:var(--court);color:var(--cream);border-color:var(--court)}
+  .exp-btn.global:hover{background:var(--court-deep)}
+  .saveline{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.04em;color:var(--ink-soft);margin:18px 0 26px;display:flex;align-items:center;gap:8px}
+  .saveline .pulse{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+  .q{background:var(--paper);border:1px solid var(--line);border-radius:16px;margin-bottom:22px;overflow:hidden;box-shadow:var(--shadow)}
+  .q-head{padding:22px 26px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(236,228,214,.4),transparent)}
+  .q-num{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;color:var(--clay);font-weight:500;margin-bottom:9px;display:flex;align-items:center;gap:10px}
+  .q-num .chip{background:var(--court);color:var(--cream);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 9px;border-radius:10px}
+  .q-title{font-family:'Fraunces',serif;font-weight:600;font-size:20px;color:var(--court-deep);line-height:1.25;letter-spacing:-.01em;margin-bottom:8px}
+  .q-prompt{font-size:14.5px;color:var(--ink-soft);max-width:72ch}
+  .samples{margin:14px 26px 0}
+  .samples summary{cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--clay);padding:9px 0;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}
+  .samples summary::-webkit-details-marker{display:none}
+  .samples summary::before{content:"▸";transition:transform .15s;display:inline-block}
+  .samples[open] summary::before{transform:rotate(90deg)}
+  .samples .sbody{background:var(--cream-warm);border:1px solid var(--line);border-radius:11px;padding:16px 18px;margin-bottom:6px}
+  .samples .sbody .sn{font-size:13px;color:var(--ink-soft);margin:0 0 10px;padding-left:16px;position:relative;line-height:1.55}
+  .samples .sbody .sn:last-child{margin-bottom:0}
+  .samples .sbody .sn::before{content:"";position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:50%;background:var(--clay)}
+  .samples .sbody .sn b{color:var(--ink);font-weight:600}
+  .samples .sbody .tension{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--court-deep);font-style:italic}
+  .answers{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:20px 26px 8px}
+  .ans{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
+  .ans-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line)}
+  .ans-who{display:flex;align-items:center;gap:9px;font-weight:600;font-size:13px;letter-spacing:.02em}
+  .ans-who .badge{width:11px;height:11px;border-radius:50%}
+  .ans.tarek .ans-who .badge{background:var(--tarek)}.ans.karim .ans-who .badge{background:var(--karim)}.ans.agreed .ans-who .badge{background:var(--agreed)}
+  .ans-who .yours{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:var(--court-deep);padding:2px 7px;border-radius:9px;font-weight:600}
+  .ans-who .readonly{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .ans-stamp{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-soft);letter-spacing:.03em}
+  .agreed-wrap{padding:6px 26px 24px}
+  .ans.agreed{border:1.5px solid var(--agreed);background:linear-gradient(180deg,#fcfaf4,#fff)}
+  .ans.agreed .ans-head{background:rgba(122,106,63,.07);border-bottom-color:rgba(122,106,63,.25)}
+  .ans.agreed .ans-who{color:var(--agreed)}
+  .agreed-tag{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--agreed);background:rgba(122,106,63,.12);padding:2px 8px;border-radius:9px;font-weight:600}
+  .toolbar{display:flex;flex-wrap:wrap;gap:2px;padding:7px 10px;border-bottom:1px solid var(--line);background:var(--cream-warm)}
+  .tb{width:30px;height:30px;border:1px solid transparent;background:transparent;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink-soft);font-size:14px;font-weight:600}
+  .tb:hover{background:#fff;border-color:var(--line);color:var(--court-deep)}
+  .tb svg{width:15px;height:15px}
+  .tb.divider{width:1px;height:22px;background:var(--line);margin:4px 5px;padding:0;border:none;pointer-events:none}
+  .editor{min-height:120px;padding:14px 16px;font-size:14.5px;line-height:1.6;color:var(--ink);outline:none;overflow-y:auto;flex:1}
+  .editor:empty:before{content:attr(data-ph);color:#b3aa9a;font-style:italic}
+  .editor[contenteditable="false"]{background:#faf7f1;color:var(--ink-soft);cursor:default}
+  .editor ul,.editor ol{margin:6px 0 6px 22px}.editor li{margin:2px 0}
+  .editor b,.editor strong{font-weight:700}.editor p{margin:0 0 8px}
+  .ans-foot{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--line);background:var(--cream-warm)}
+  .ans-foot .hint{font-size:11px;color:var(--ink-soft)}
+  .save-btn{color:var(--cream);border:none;padding:8px 18px;border-radius:8px;font-size:12.5px;font-weight:600;letter-spacing:.02em;transition:background .15s;background:var(--court)}
+  .save-btn:hover{filter:brightness(.93)}
+  .save-btn:disabled{background:var(--line);cursor:default;filter:none}
+  .save-btn.saved{background:var(--ok)!important}
+  .ans.tarek .save-btn{background:var(--tarek)}.ans.karim .save-btn{background:var(--karim)}.ans.agreed .save-btn{background:var(--agreed)}
+  .buildbar{position:sticky;bottom:0;z-index:25;margin:30px -26px -90px;padding:18px 26px 22px;background:linear-gradient(180deg,rgba(244,239,230,0),var(--cream) 32%);display:flex;flex-direction:column;align-items:center;gap:10px}
+  .build-status{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.04em;color:var(--ink-soft);text-align:center}
+  .build-status b{color:var(--court-deep)}
+  .build-btn{background:var(--clay);color:#fff;border:none;padding:15px 30px;border-radius:12px;font-size:15px;font-weight:700;letter-spacing:.01em;box-shadow:0 8px 22px rgba(199,93,60,.28);display:inline-flex;align-items:center;gap:11px;transition:transform .12s,box-shadow .12s,background .15s}
+  .build-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 28px rgba(199,93,60,.34)}
+  .build-btn:disabled{background:#c9bfae;box-shadow:none;cursor:not-allowed}
+  .build-btn .arrow{font-size:18px}
+  .ctx{background:var(--cream-warm);border:1px solid var(--line);border-radius:11px;padding:13px 16px;margin-bottom:18px}
+  .ctx-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--agreed);margin-bottom:9px;display:flex;align-items:center;gap:7px}
+  .ctx-label .pin{width:5px;height:5px;border-radius:50%;background:var(--agreed)}
+  .ctx-item{font-size:13px;color:var(--ink-soft);line-height:1.5;margin-bottom:8px;padding-left:14px;position:relative}
+  .ctx-item:last-child{margin-bottom:0}
+  .ctx-item::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:2px;background:var(--clay)}
+  .ctx-item .ctx-q{font-weight:600;color:var(--court-deep);display:block;font-size:11.5px;letter-spacing:.02em;margin-bottom:1px}
+  .ctx-item.empty{color:#b3aa9a;font-style:italic}.ctx-item.empty::before{background:#ccc}
+  .art{background:var(--paper);border:1px solid var(--line);border-radius:16px;margin-bottom:22px;overflow:hidden;box-shadow:var(--shadow)}
+  .art-head{padding:22px 26px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(236,228,214,.4),transparent)}
+  .art-num{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;color:var(--clay);margin-bottom:9px;display:flex;align-items:center;gap:10px}
+  .art-num .chip{background:var(--court);color:var(--cream);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 9px;border-radius:10px}
+  .art-title{font-family:'Fraunces',serif;font-weight:600;font-size:20px;color:var(--court-deep);line-height:1.25;margin-bottom:8px}
+  .art-prompt{font-size:14.5px;color:var(--ink-soft);max-width:72ch}
+  .art-template{margin-top:12px;background:#fff;border:1px dashed var(--line);border-radius:9px;padding:11px 14px;font-size:13px;color:var(--court-deep);font-family:'IBM Plex Mono',monospace;line-height:1.6}
+  .art-body{padding:18px 26px 24px}
+  .vtrack{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--court-deep);color:var(--cream);border-radius:13px;padding:15px 20px;margin:8px 0 26px}
+  .vtrack .vinfo{font-size:13px;display:flex;flex-direction:column;gap:3px}
+  .vtrack .vinfo .vmain{font-weight:600;display:flex;align-items:center;gap:9px}
+  .vtrack .vinfo .vmain .vnum{font-family:'IBM Plex Mono',monospace;font-size:11px;background:rgba(217,164,65,.25);color:var(--gold);padding:2px 9px;border-radius:9px}
+  .vtrack .vinfo .vsub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(244,239,230,.6);letter-spacing:.03em}
+  .vtrack .vprev{background:transparent;border:1px solid rgba(244,239,230,.3);color:var(--cream);padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:7px}
+  .vtrack .vprev:hover{background:rgba(244,239,230,.1)}
+  .vtrack .vprev:disabled{opacity:.4;cursor:not-allowed}
+  .locked-panel,.stub-panel{text-align:center;padding:74px 20px;color:var(--ink-soft)}
+  .locked-panel .ico,.stub-panel .ico{font-size:34px;margin-bottom:16px;opacity:.5}
+  .locked-panel h3,.stub-panel h3{font-family:'Fraunces',serif;font-weight:600;font-size:23px;color:var(--court-deep);margin-bottom:10px}
+  .locked-panel p,.stub-panel p{font-size:15px;max-width:50ch;margin:0 auto 6px}
+  .locked-panel .gate,.stub-panel .seq{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--clay);margin-top:16px}
+  #modal{position:fixed;inset:0;background:rgba(31,63,55,.55);display:flex;align-items:center;justify-content:center;z-index:80;padding:24px;opacity:0;pointer-events:none;transition:opacity .2s}
+  #modal.show{opacity:1;pointer-events:auto}
+  .modal-card{background:var(--paper);border-radius:16px;max-width:740px;width:100%;max-height:86vh;overflow:auto;box-shadow:var(--shadow)}
+  .modal-head{position:sticky;top:0;background:var(--paper);border-bottom:1px solid var(--line);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;z-index:2}
+  .modal-head h3{font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--court-deep)}
+  .modal-head .mh-actions{display:flex;gap:8px;align-items:center}
+  .modal-x{background:transparent;border:1px solid var(--line);width:32px;height:32px;border-radius:8px;color:var(--ink-soft);font-size:16px}
+  .modal-x:hover{background:var(--cream-warm)}
+  .modal-body{padding:22px 24px 28px}
+  .mv-item{margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}.mv-item:last-child{border-bottom:none}
+  .mv-q{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);margin-bottom:5px}
+  .mv-title{font-weight:600;color:var(--court-deep);font-size:14.5px;margin-bottom:7px}
+  .mv-ans{font-size:14px;color:var(--ink-soft);line-height:1.55}.mv-ans.empty{font-style:italic;color:#b3aa9a}
+  #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--court-deep);color:var(--cream);padding:12px 22px;border-radius:10px;font-size:13.5px;font-weight:500;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:all .25s;z-index:90}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (max-width:760px){.answers{grid-template-columns:1fr}.tabhead{flex-direction:column}main{padding:24px 16px 80px}.buildbar{margin:24px -16px -80px;padding:16px}}
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div id="login"><div class="login-card">
+  <div class="eyebrow">Drop Shot Coffee · Brand Strategy</div>
+  <h1>Brand Strategy Workspace</h1>
+  <p>Sign in to work the brand with your co-founder. Tarek and Karim each have their own login.</p>
+  <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" placeholder="you@dropshotcoffee.us"></div>
+  <div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+  <button class="btn-primary" id="loginBtn">Sign in</button>
+  <div class="login-err" id="loginErr"></div>
+</div></div>
+<div id="app" class="hidden">
+  <div class="topbar"><div class="brand"><span class="dot"></span> Drop Shot Coffee — Brand Strategy</div>
+    <div class="right"><span class="whoami" id="whoami"></span><button class="signout" id="signoutBtn">Sign out</button></div></div>
+  <div class="tabbar" id="tabbar"></div>
+  <main id="main"></main>
+</div>
+<div id="modal"><div class="modal-card">
+  <div class="modal-head"><h3 id="modalTitle">Previous version</h3>
+    <div class="mh-actions"><button class="exp-btn" id="modalDownload">⤓ Download</button><button class="modal-x" id="modalClose">✕</button></div></div>
+  <div class="modal-body" id="modalBody"></div>
+</div></div>
+<div id="toast"></div>
+<script>
+/* ===== CONFIG ===== */
+const SB_URL="https://iwufnpzlwxzzedwcrjrk.supabase.co";
+const SB_KEY="sb_publishable_suHnnWiR60uSP_bKx9V_Yg_GJoCzddq";
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+const ROLE_TO_AUTHOR={admin:"tarek",karim:"karim"};
+const AUTHORS={tarek:{label:"Tarek"},karim:{label:"Karim"},agreed:{label:"Agreed"}};
+let CURRENT={user:null,role:null,author:null,display:null};
+let POLL=null,activeTab="discovery",RESPONSES={},POS_RESPONSES={},LATEST_VERSION=null,PREV_VERSION=null;
+
+const TABS=[
+  {key:"discovery",n:"01",label:"Discovery",built:true},
+  {key:"positioning",n:"02",label:"Positioning",built:true,gated:true,blurb:"Converts the agreed Discovery answers into the brand's category frame, positioning statement, and onliness wedge."},
+  {key:"audience",n:"03",label:"Audience & Job",built:false,blurb:"Locks the target by value and moment, and the functional / emotional / social job."},
+  {key:"personality",n:"04",label:"Personality & Voice",built:false,blurb:"Brand personality, archetype (as expression, not costume), and the voice system."},
+  {key:"brief",n:"05",label:"Designer Brief",built:false,blurb:"Packages everything locked above into the brief the designer executes against."}
+];
+
+const DISCOVERY={
+  intro:"Eight questions, in the order a strategist works them: category &rarr; customer &rarr; competitor &rarr; frame &rarr; difference &rarr; conviction &rarr; sacrifice &rarr; personality. Each of you writes your own view, then together you write the <b>Agreed</b> answer &mdash; what survives. The Agreed answers are what flow to Positioning.",
+  questions:[
+    {key:"q1_category",chip:"The category",title:"What business are we really in?",
+     prompt:"Not &ldquo;coffee&rdquo; &mdash; what category does the customer file us under, and who else is in that set in their mind?",
+     samples:["<b>The narrow read:</b> Specialty coffee. Filed in the premium-bean aisle next to Blue Bottle, Stumptown, a local roaster &mdash; we win or lose on coffee quality.",
+       "<b>The wide read:</b> We&rsquo;re in the court-sport social ritual, not coffee. Filed next to whatever makes a morning at the club feel good. Our shelf-mates aren&rsquo;t roasters.",
+       "<b>The active-lifestyle read:</b> Better-for-you active-lifestyle beverage &mdash; next to AG1, Athletic Brewing, Recess."],
+     tension:"These three categories carry different competitors, price logic, and ceilings. Pick the one the customer actually uses."},
+    {key:"q2_customer",chip:"The customer",title:"Who are we for &mdash; and what are they hiring our coffee to do?",
+     prompt:"Describe them by what they value and the moment they&rsquo;re in. Name the job: functional, emotional, social.",
+     samples:["A 30-something social club player, mid-morning, between games. <b>Functional:</b> a genuinely good cup. <b>Emotional:</b> belonging to the scene. <b>Social:</b> the cup is a marker &mdash; &ldquo;I&rsquo;m a regular here.&rdquo;",
+       "The affluent racquet-club regular who already pays for the lifestyle &mdash; coffee is part of how the morning feels premium, not a caffeine errand.",
+       "<b>From the research:</b> the real job is ritual / belonging / social token &mdash; <b>not</b> energy or performance (owned by Reign Storm and electrolyte mixes)."],
+     tension:"Describe them by age and income alone and we miss the job. The moment and the job are what we design for."},
+    {key:"q3_competitor",chip:"What we&rsquo;re up against",title:"Who do we really compete with &mdash; and what&rsquo;s become noise?",
+     prompt:"Who and what compete for that job &mdash; and what does everyone in this space say that no longer differentiates anyone?",
+     samples:["<b>Real competitors:</b> whatever&rsquo;s already in their hand (club caf&eacute; drip, an energy drink, a water bottle), Reign Storm on-court, and the inertia of not caring.",
+       "<b>The noise to avoid:</b> the pun cluster (dink, kitchen, rally, drop-shot), bright playful packaging, &ldquo;fun + community,&rdquo; the &ldquo;10% back to clubs&rdquo; line. Parity, not difference.",
+       "<b>Closest real competitor:</b> Kitchen Line Coffee Co. &mdash; the only one chasing &ldquo;lifestyle,&rdquo; but still on the pun cluster and not premium."],
+     tension:"The competitor isn&rsquo;t always another coffee &mdash; it&rsquo;s whatever the customer hires instead, including doing nothing."},
+    {key:"q4_frame",chip:"The frame &middot; load-bearing",title:"Are we a coffee brand, or a culture brand that starts with coffee?",
+     prompt:"Pick one &mdash; &ldquo;premium coffee for the pickleball community&rdquo; OR &ldquo;a court-sport social/lifestyle brand that starts with coffee&rdquo; &mdash; and name the trade-off. Nothing downstream locks until this does.",
+     samples:["<b>Option A &mdash; &ldquo;Premium coffee for the pickleball community.&rdquo;</b> Sharp, ownable, easy to say. <b>Trade-off:</b> caps the market, risks novelty, fragile if pickleball cools.",
+       "<b>Option B &mdash; &ldquo;A court-sport social/lifestyle brand that starts with coffee.&rdquo;</b> Bigger ceiling, license to extend. <b>Trade-off:</b> harder, needs cultural capability &mdash; and &ldquo;Drop Shot&rdquo; is crowded in apparel (Class 25 taken) and venues."],
+     tension:"The first domino. It decides competitors, price, the right to extend, and the ceiling. Decide it consciously."},
+    {key:"q5_difference",chip:"The difference",title:"What can we claim that no one else credibly can?",
+     prompt:"Complete it honestly: &ldquo;Drop Shot is the only ___ that ___.&rdquo; If a competitor could say it tomorrow, it isn&rsquo;t an &ldquo;only&rdquo; yet.",
+     samples:["&ldquo;The only premium coffee built natively for the court-sport social scene &mdash; not a roaster with a pickleball label, not an energy drink chasing the tournament.&rdquo;",
+       "<b>Pressure-test:</b> is that true and defensible, or just unclaimed? An &ldquo;only&rdquo; needs a product or experience truth behind it &mdash; a format, a ritual, an access nobody else has."],
+     tension:"Unclaimed &ne; ownable. The wedge has to be backed by something true, not just unsaid."},
+    {key:"q6_conviction",chip:"The conviction",title:"What do we believe that competitors don&rsquo;t act on?",
+     prompt:"The belief about this category or customer that the obvious players ignore &mdash; and that we&rsquo;re willing to build on.",
+     samples:["Everyone treats coffee-in-pickleball as performance fuel or a novelty gift. We believe the real job is social ritual and belonging &mdash; and no one builds for that.",
+       "We believe the court-sport scene is a culture, not a trend &mdash; and the people in it will pay premium for things that signal they belong, like running and cycling communities already do."],
+     tension:"A conviction matters only if competitors could act on it and choose not to. That gap is the opportunity."},
+    {key:"q7_sacrifice",chip:"Sacrifice",title:"What are we willing to give up to own something?",
+     prompt:"Name who and what we&rsquo;ll sacrifice. A position that gives up nothing isn&rsquo;t a position.",
+     samples:["Give up the performance/energy player who wants caffeine-as-fuel (cede to Reign / Jigsaw).",
+       "Give up the bargain buyer &mdash; we are not the value option.",
+       "Give up mass-retail-first &mdash; we earn the brand in clubs and venues before shelves.",
+       "Possibly give up &ldquo;pickleball-only&rdquo; branding under Frame B, to avoid the novelty ceiling."],
+     tension:"If we can&rsquo;t name what we&rsquo;re giving up, we&rsquo;ve chosen everyone &mdash; which is no one."},
+    {key:"q8_personality",chip:"Personality",title:"If the brand walked into the club, who is it?",
+     prompt:"Describe the person &mdash; and be honest about whether it&rsquo;s backed by product truth or it&rsquo;s a costume we just like.",
+     samples:["<b>From the research:</b> joyful, social, inclusive, with a premium edge &mdash; the Nettie reading (Jester/Everyman with polish). <b>Not</b> outlaw, hero, or hyper-competitive.",
+       "<b>Product-truth check:</b> honest only if (a) the coffee is genuinely good and (b) the brand truly shows up in the social scene. Pick &ldquo;premium and refined&rdquo; over ordinary coffee and people feel the costume."],
+     tension:"Personality is expression, not strategy. Back it with what&rsquo;s true of the product, or it reads as a costume."}
+  ]
+};
+
+const POSITIONING={
+  intro:"The standard positioning artifacts every brand strategy must produce &mdash; built from the <b>Agreed</b> Discovery answers shown in context above each. Tarek and Karim both edit these together; this is the convergent phase.",
+  artifacts:[
+    {key:"p1_frame",chip:"Category frame &middot; load-bearing",title:"The category frame",
+     prompt:"State the single frame the whole brand inherits. This is the commitment everything else is built on.",
+     template:"We are ___ (e.g. &ldquo;premium coffee for the pickleball community&rdquo; OR &ldquo;a court-sport social brand that starts with coffee&rdquo;), competing in the customer&rsquo;s mind against ___.",
+     ctx:["q1_category","q4_frame"]},
+    {key:"p2_statement",chip:"Positioning statement",title:"The positioning statement",
+     prompt:"The canonical four-part statement. Fill the template with the agreed inputs.",
+     template:"For [target] who [need / occasion], Drop Shot is the [frame] that [single most compelling benefit], because [reason to believe].",
+     ctx:["q2_customer","q4_frame","q5_difference"]},
+    {key:"p3_onliness",chip:"The wedge",title:"Onliness statement",
+     prompt:"Neumeier&rsquo;s test &mdash; force the wedge to one defensible claim. If &ldquo;only&rdquo; doesn&rsquo;t fit, it isn&rsquo;t a wedge yet.",
+     template:"Drop Shot is the ONLY [category] that [differentiator].",
+     ctx:["q5_difference","q6_conviction"]},
+    {key:"p4_competitive",chip:"Frame of reference",title:"Competitive frame of reference",
+     prompt:"Who we are positioned against in the customer&rsquo;s mind, stated explicitly. Positioning is meaningless without &ldquo;compared to what.&rdquo;",
+     template:"Unlike [primary competitor / the noise], Drop Shot ___.",
+     ctx:["q3_competitor"]},
+    {key:"p5_rtb",chip:"Proof",title:"Reasons to believe",
+     prompt:"The proof stack under the benefit, so the claim isn&rsquo;t just an assertion. 2&ndash;4 concrete proofs.",
+     template:"We can claim this because: 1) ___  2) ___  3) ___",
+     ctx:["q5_difference","q6_conviction"]},
+    {key:"p6_value",chip:"Value proposition",title:"The value proposition",
+     prompt:"The benefit tied to the job from discovery &mdash; functional + emotional + social.",
+     template:"Functional: ___ &middot; Emotional: ___ &middot; Social: ___",
+     ctx:["q2_customer","q7_sacrifice"]},
+    {key:"p7_personality",chip:"Optional &middot; bridge",title:"Personality bridge & trueline",
+     prompt:"Optional: the personality that expresses the position, plus the internal &ldquo;trueline&rdquo; beneath any future tagline.",
+     template:"Personality: ___ &middot; Trueline (internal truth): ___",
+     ctx:["q8_personality"]}
+  ]
+};
+
+/* ===== AUTH ===== */
+const $=s=>document.querySelector(s);
+$("#loginBtn").addEventListener("click",doLogin);
+$("#password").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});
+$("#email").addEventListener("keydown",e=>{if(e.key==="Enter")$("#password").focus();});
+$("#signoutBtn").addEventListener("click",async()=>{await sb.auth.signOut();location.reload();});
+async function doLogin(){
+  const email=$("#email").value.trim(),password=$("#password").value,err=$("#loginErr");err.textContent="";
+  if(!email||!password){err.textContent="Enter your email and password.";return;}
+  $("#loginBtn").textContent="Signing in\u2026";$("#loginBtn").disabled=true;
+  const{data,error}=await sb.auth.signInWithPassword({email,password});
+  $("#loginBtn").textContent="Sign in";$("#loginBtn").disabled=false;
+  if(error){err.textContent=error.message;return;}
+  await boot(data.user);
+}
+async function boot(user){
+  const{data:roleRow,error}=await sb.from("user_roles").select("role,display_name").eq("user_id",user.id).single();
+  if(error||!roleRow){await sb.auth.signOut();$("#loginErr").textContent="No role assigned to this account. Please contact Tarek.";return;}
+  CURRENT={user,role:roleRow.role,author:ROLE_TO_AUTHOR[roleRow.role]||null,display:roleRow.display_name};
+  $("#login").classList.add("hidden");$("#app").classList.remove("hidden");
+  renderWhoami();renderTabs();await refreshVersions();selectTab("discovery");startPolling();
+}
+function renderWhoami(){
+  const a=CURRENT.author,color=a==="tarek"?"var(--tarek)":a==="karim"?"var(--karim)":"var(--gold)";
+  const label=a?AUTHORS[a].label+" \u00b7 editing enabled":CURRENT.display+" \u00b7 view only";
+  $("#whoami").innerHTML='<span class="badge" style="background:'+color+'"></span>'+label;
+}
+(async()=>{const{data}=await sb.auth.getSession();if(data.session)await boot(data.session.user);})();
+
+/* ===== TABS ===== */
+function renderTabs(){
+  const bar=$("#tabbar");bar.innerHTML="";
+  TABS.forEach(t=>{
+    const isLockedPos=(t.key==="positioning"&&!LATEST_VERSION);
+    const b=document.createElement("button");
+    b.className="tab"+(t.built?"":" stub")+(isLockedPos?" locked":"")+(t.key===activeTab?" active":"");
+    let pill=t.built?(isLockedPos?' <span class="pill">locked</span>':""):' <span class="pill">soon</span>';
+    b.innerHTML='<span class="n">'+t.n+'</span>'+t.label+pill;
+    b.addEventListener("click",()=>{
+      if(isLockedPos){toast("Positioning unlocks once Discovery is locked & built.");selectTab("discovery");return;}
+      selectTab(t.key);
+    });
+    bar.appendChild(b);
+  });
+}
+function selectTab(key){
+  activeTab=key;renderTabs();const tab=TABS.find(t=>t.key===key);
+  if(key==="discovery")renderDiscovery();else if(key==="positioning")renderPositioning();else renderStub(tab);
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+/* ===== DISCOVERY ===== */
+async function renderDiscovery(){
+  $("#main").innerHTML=
+   '<div class="tabhead"><div><div class="label">Phase 01 \u00b7 Discovery</div><h2>Brand Discovery</h2>'
+   +'<p class="intro">'+DISCOVERY.intro+'</p></div>'
+   +'<div class="exports"><span class="exp-label">Export tab</span>'
+   +'<button class="exp-btn" data-exp="md">.md</button><button class="exp-btn" data-exp="docx">.docx</button>'
+   +'<button class="exp-btn" data-exp="pdf">.pdf</button><button class="exp-btn global" data-exp="all">\u2913 Export everything</button></div></div>'
+   +'<div class="saveline"><span class="pulse"></span> Tarek &amp; Karim views export separately. The Agreed answer is what flows to Positioning.</div>'
+   +'<div id="qlist"></div>'
+   +'<div class="buildbar"><div class="build-status" id="buildStatus"></div>'
+   +'<button class="build-btn" id="buildBtn"><span>Lock Discovery &amp; build Positioning</span><span class="arrow">\u2192</span></button></div>';
+  $("#main").querySelectorAll("[data-exp]").forEach(b=>b.addEventListener("click",()=>{const m=b.dataset.exp;m==="all"?exportEverything():exportTab("discovery",m);}));
+  const list=$("#qlist");DISCOVERY.questions.forEach((q,i)=>list.appendChild(buildQuestion(q,i)));
+  $("#buildBtn").addEventListener("click",buildPositioning);
+  await loadDiscovery();
+}
+function buildQuestion(q,idx){
+  const wrap=document.createElement("div");wrap.className="q";wrap.id="q-"+q.key;
+  const samplesHtml=q.samples.map(s=>'<p class="sn">'+s+'</p>').join("")+(q.tension?'<div class="tension">\u2696\ufe0e '+q.tension+'</div>':"");
+  wrap.innerHTML=
+   '<div class="q-head"><div class="q-num">Q'+(idx+1)+' <span class="chip">'+q.chip+'</span></div>'
+   +'<div class="q-title">'+q.title+'</div><div class="q-prompt">'+q.prompt+'</div></div>'
+   +'<details class="samples"><summary>Sample answers &mdash; strawmen to react to</summary><div class="sbody">'+samplesHtml+'</div></details>'
+   +'<div class="answers">'+povBox(q.key,"tarek")+povBox(q.key,"karim")+'</div>'
+   +'<div class="agreed-wrap">'+agreedBox(q.key)+'</div>';
+  setTimeout(()=>{wireBox(q.key,"tarek");wireBox(q.key,"karim");wireBox(q.key,"agreed");},0);
+  return wrap;
+}
+function povBox(qkey,author){
+  const a=AUTHORS[author],mine=CURRENT.author===author;
+  return '<div class="ans '+author+'" data-q="'+qkey+'" data-author="'+author+'">'
+   +'<div class="ans-head"><div class="ans-who"><span class="badge"></span>'+a.label+"'s view "
+   +(mine?'<span class="yours">You</span>':'<span class="readonly">Read-only</span>')+'</div>'
+   +'<div class="ans-stamp" id="stamp-'+qkey+'-'+author+'"></div></div>'
+   +(mine?toolbarHtml(qkey,author):"")
+   +'<div class="editor" id="ed-'+qkey+'-'+author+'" contenteditable="'+mine+'" data-ph="'+(mine?'Your view\u2026 Tab to indent.':'Nothing yet from '+a.label+'.')+'"></div>'
+   +(mine?'<div class="ans-foot"><span class="hint">Tab = indent \u00b7 Shift+Tab = outdent</span><button class="save-btn" id="save-'+qkey+'-'+author+'">Save</button></div>':"")
+   +'</div>';
+}
+function agreedBox(qkey){
+  const canEdit=CURRENT.author==="tarek"||CURRENT.author==="karim";
+  return '<div class="ans agreed" data-q="'+qkey+'" data-author="agreed">'
+   +'<div class="ans-head"><div class="ans-who"><span class="badge"></span>Agreed &mdash; what survives '
+   +'<span class="agreed-tag">Flows to Positioning</span></div>'
+   +'<div class="ans-stamp" id="stamp-'+qkey+'-agreed"></div></div>'
+   +(canEdit?toolbarHtml(qkey,"agreed"):"")
+   +'<div class="editor" id="ed-'+qkey+'-agreed" contenteditable="'+canEdit+'" data-ph="'+(canEdit?'The single answer you both land on\u2026':'Awaiting the agreed answer.')+'"></div>'
+   +(canEdit?'<div class="ans-foot"><span class="hint">Both of you can edit &amp; save this box</span><button class="save-btn" id="save-'+qkey+'-agreed">Save</button></div>':"")
+   +'</div>';
+}
+
+/* ===== TOOLBAR ===== */
+function toolbarHtml(qkey,author){
+  const id=qkey+'-'+author;
+  const B=(cmd,icon,title,arg)=>'<button class="tb" data-cmd="'+cmd+'" data-arg="'+(arg||"")+'" title="'+title+'" type="button">'+icon+'</button>';
+  return '<div class="toolbar" data-for="'+id+'">'
+   +B("bold","<b>B</b>","Bold")+B("italic","<i>I</i>","Italic")+B("underline","<u>U</u>","Underline")
+   +'<span class="tb divider"></span>'+B("insertUnorderedList",icoList(),"Bulleted list")+B("insertOrderedList",icoNum(),"Numbered list")
+   +'<span class="tb divider"></span>'+B("outdent",icoOut(),"Outdent (Shift+Tab)")+B("indent",icoIn(),"Indent (Tab)")
+   +'<span class="tb divider"></span>'+B("formatBlock",icoH(),"Heading","H3")+B("removeFormat",icoClear(),"Clear formatting")+'</div>';
+}
+const icoList=()=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="4" cy="6" r="1.4" fill="currentColor"/><circle cx="4" cy="12" r="1.4" fill="currentColor"/><circle cx="4" cy="18" r="1.4" fill="currentColor"/><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/></svg>';
+const icoNum=()=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><text x="2" y="8" font-size="7" fill="currentColor" stroke="none">1</text><text x="2" y="14" font-size="7" fill="currentColor" stroke="none">2</text><text x="2" y="20" font-size="7" fill="currentColor" stroke="none">3</text><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/></svg>';
+const icoIn=()=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="5" x2="21" y2="5"/><line x1="9" y1="10" x2="21" y2="10"/><line x1="9" y1="14" x2="21" y2="14"/><line x1="3" y1="19" x2="21" y2="19"/><polyline points="3,9 6,12 3,15"/></svg>';
+const icoOut=()=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="5" x2="21" y2="5"/><line x1="9" y1="10" x2="21" y2="10"/><line x1="9" y1="14" x2="21" y2="14"/><line x1="3" y1="19" x2="21" y2="19"/><polyline points="6,9 3,12 6,15"/></svg>';
+const icoH=()=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 5v14M13 5v14M5 12h8" stroke-linecap="round"/></svg>';
+const icoClear=()=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l14 14M7 6h10M9 6l-1 9"/></svg>';
+function wireBox(qkey,author){
+  const canEdit=(author==="agreed")?(CURRENT.author==="tarek"||CURRENT.author==="karim"):(CURRENT.author===author);
+  if(!canEdit)return;
+  const ed=document.getElementById("ed-"+qkey+"-"+author),toolbar=document.querySelector('.toolbar[data-for="'+qkey+'-'+author+'"]'),saveBtn=document.getElementById("save-"+qkey+"-"+author);
+  if(!ed||!toolbar)return;
+  toolbar.querySelectorAll(".tb[data-cmd]").forEach(btn=>{
+    btn.addEventListener("mousedown",e=>e.preventDefault());
+    btn.addEventListener("click",()=>{ed.focus();document.execCommand(btn.dataset.cmd,false,btn.dataset.arg||null);markDirty(qkey,author);});
+  });
+  ed.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();document.execCommand(e.shiftKey?"outdent":"indent",false,null);markDirty(qkey,author);}});
+  ed.addEventListener("input",()=>markDirty(qkey,author));
+  saveBtn.addEventListener("click",()=>saveAnswer("discovery",qkey,author));
+}
+function markDirty(qkey,author){const btn=document.getElementById("save-"+qkey+"-"+author);if(btn){btn.textContent="Save";btn.classList.remove("saved");btn.disabled=false;}}
+
+/* ===== READ / WRITE ===== */
+async function loadDiscovery(){
+  const{data,error}=await sb.from("brand_strategy_responses").select("question_key,author,content_html,content_text,updated_at").eq("tab","discovery");
+  if(error){toast("Couldn't load Discovery.");return;}
+  RESPONSES={};(data||[]).forEach(r=>{RESPONSES[r.question_key]=RESPONSES[r.question_key]||{};RESPONSES[r.question_key][r.author]=r;});
+  paintDiscovery();updateBuildStatus();
+}
+function paintDiscovery(){
+  DISCOVERY.questions.forEach(q=>{
+    ["tarek","karim","agreed"].forEach(author=>{
+      const r=RESPONSES[q.key]&&RESPONSES[q.key][author],ed=document.getElementById("ed-"+q.key+"-"+author),stamp=document.getElementById("stamp-"+q.key+"-"+author);
+      if(!ed)return;
+      const canEdit=(author==="agreed")?(CURRENT.author==="tarek"||CURRENT.author==="karim"):(CURRENT.author===author);
+      if(canEdit&&document.activeElement===ed)return;
+      const html=r?r.content_html:"";if(ed.innerHTML!==html)ed.innerHTML=html;
+      if(stamp)stamp.textContent=r?"saved "+timeAgo(r.updated_at):"";
+    });
+  });
+}
+async function saveAnswer(tab,qkey,author){
+  const ed=document.getElementById("ed-"+qkey+"-"+author),btn=document.getElementById("save-"+qkey+"-"+author);
+  const html=ed.innerHTML.trim(),text=ed.innerText.trim();
+  btn.textContent="Saving\u2026";btn.disabled=true;
+  const row={tab,question_key:qkey,author,user_id:CURRENT.user.id,content_html:html,content_text:text};
+  const{error}=await sb.from("brand_strategy_responses").upsert(row,{onConflict:"tab,question_key,author"});
+  if(error){btn.textContent="Save";btn.disabled=false;toast("Save failed: "+error.message);return;}
+  btn.textContent="Saved \u2713";btn.classList.add("saved");
+  const store=tab==="discovery"?RESPONSES:POS_RESPONSES;
+  store[qkey]=store[qkey]||{};store[qkey][author]={question_key:qkey,author,content_html:html,content_text:text,updated_at:new Date().toISOString()};
+  const stamp=document.getElementById("stamp-"+qkey+"-"+author);if(stamp)stamp.textContent="saved just now";
+  if(tab==="discovery")updateBuildStatus();
+  toast("Saved.");
+}
+/* ===== BUILD POSITIONING (two-phase gate + versioning) ===== */
+function agreedFilledCount(){
+  return DISCOVERY.questions.filter(q=>{const a=RESPONSES[q.key]&&RESPONSES[q.key].agreed;return a&&a.content_text&&a.content_text.trim().length>0;}).length;
+}
+function updateBuildStatus(){
+  const status=$("#buildStatus"),btn=$("#buildBtn");if(!status||!btn)return;
+  const filled=agreedFilledCount(),total=DISCOVERY.questions.length,firstBuildDone=!!LATEST_VERSION;
+  if(!firstBuildDone){
+    const ok=filled===total;btn.disabled=!ok;
+    status.innerHTML=ok?'All <b>'+total+'/'+total+'</b> Agreed answers complete &mdash; ready for the first build.'
+      :'First build needs all Agreed answers: <b>'+filled+'/'+total+'</b> done. Fill the rest to unlock Positioning.';
+    btn.querySelector("span").textContent="Lock Discovery & build Positioning";
+  }else{
+    btn.disabled=filled===0;
+    status.innerHTML='Positioning is live (v'+LATEST_VERSION.version_number+'). Update any Agreed answer and re-sync &mdash; <b>'+filled+'/'+total+'</b> currently filled.';
+    btn.querySelector("span").textContent="Re-sync Positioning from Discovery";
+  }
+}
+async function buildPositioning(){
+  const filled=agreedFilledCount(),total=DISCOVERY.questions.length;
+  if(!LATEST_VERSION&&filled<total){toast("First build needs all 8 Agreed answers.");return;}
+  if(filled===0){toast("Nothing agreed yet to build from.");return;}
+  const snapshot={};DISCOVERY.questions.forEach(q=>{const a=RESPONSES[q.key]&&RESPONSES[q.key].agreed;snapshot[q.key]=a?a.content_html:"";});
+  const nextNum=(LATEST_VERSION?LATEST_VERSION.version_number:0)+1;
+  const btn=$("#buildBtn");btn.disabled=true;btn.querySelector("span").textContent="Syncing\u2026";
+  const{error}=await sb.from("positioning_versions").insert({version_number:nextNum,snapshot,pushed_by:CURRENT.author,pushed_by_name:AUTHORS[CURRENT.author].label});
+  if(error){toast("Build failed: "+error.message);updateBuildStatus();return;}
+  await refreshVersions();renderTabs();
+  toast("Positioning "+(nextNum===1?"built":"re-synced")+" \u2014 v"+nextNum+".");
+  selectTab("positioning");
+}
+async function refreshVersions(){
+  const{data}=await sb.from("positioning_versions").select("*").order("version_number",{ascending:false}).limit(2);
+  LATEST_VERSION=(data&&data[0])||null;PREV_VERSION=(data&&data[1])||null;
+}
+
+/* ===== POSITIONING ===== */
+async function renderPositioning(){
+  if(!LATEST_VERSION){
+    $("#main").innerHTML='<div class="tabhead"><div><div class="label">Phase 02 \u00b7 Positioning</div><h2>Positioning</h2></div></div>'
+     +'<div class="locked-panel"><div class="ico">\uD83D\uDD12</div><h3>Unlocks when Discovery is locked &amp; built</h3>'
+     +'<p>Complete all eight <b>Agreed</b> answers in Discovery, then press <b>\u201cLock Discovery &amp; build Positioning.\u201d</b></p>'
+     +'<div class="gate">category \u2192 customer \u2192 competitor \u2192 frame \u2192 difference \u2192 conviction \u2192 sacrifice \u2192 personality</div></div>';
+    return;
+  }
+  const v=LATEST_VERSION,by=v.pushed_by_name||(AUTHORS[v.pushed_by]&&AUTHORS[v.pushed_by].label)||v.pushed_by;
+  $("#main").innerHTML=
+   '<div class="tabhead"><div><div class="label">Phase 02 \u00b7 Positioning</div><h2>Positioning</h2>'
+   +'<p class="intro">'+POSITIONING.intro+'</p></div>'
+   +'<div class="exports"><span class="exp-label">Export tab</span>'
+   +'<button class="exp-btn" data-exp="md">.md</button><button class="exp-btn" data-exp="docx">.docx</button>'
+   +'<button class="exp-btn" data-exp="pdf">.pdf</button><button class="exp-btn global" data-exp="all">\u2913 Export everything</button></div></div>'
+   +'<div class="vtrack"><div class="vinfo"><div class="vmain"><span class="vnum">v'+v.version_number+'</span> Synced from Discovery by '+by+'</div>'
+   +'<div class="vsub">'+new Date(v.pushed_at).toLocaleString()+' \u00b7 '+timeAgo(v.pushed_at)+'</div></div>'
+   +'<button class="vprev" id="vprevBtn" '+(PREV_VERSION?"":"disabled")+'>'+(PREV_VERSION?'\u25F7 View previous version (v'+PREV_VERSION.version_number+')':'No previous version yet')+'</button></div>'
+   +'<div id="artlist"></div>';
+  $("#main").querySelectorAll("[data-exp]").forEach(b=>b.addEventListener("click",()=>{const m=b.dataset.exp;m==="all"?exportEverything():exportTab("positioning",m);}));
+  if(PREV_VERSION)$("#vprevBtn").addEventListener("click",openPrevVersion);
+  const list=$("#artlist");POSITIONING.artifacts.forEach((art,i)=>list.appendChild(buildArtifact(art,i,v.snapshot)));
+  await loadPositioning();
+}
+function buildArtifact(art,idx,snapshot){
+  const wrap=document.createElement("div");wrap.className="art";wrap.id="art-"+art.key;
+  const ctxHtml=art.ctx.map(qk=>{
+    const q=DISCOVERY.questions.find(x=>x.key===qk),html=snapshot[qk]&&snapshot[qk].trim(),plain=html?stripHtml(html):"";
+    return plain?'<div class="ctx-item"><span class="ctx-q">'+q.chip+' \u2014 \u201c'+q.title+'\u201d</span>'+plain+'</div>'
+      :'<div class="ctx-item empty"><span class="ctx-q">'+q.chip+' \u2014 \u201c'+q.title+'\u201d</span>Not answered in this version.</div>';
+  }).join("");
+  const canEdit=CURRENT.author==="tarek"||CURRENT.author==="karim";
+  wrap.innerHTML=
+   '<div class="art-head"><div class="art-num">P'+(idx+1)+' <span class="chip">'+art.chip+'</span></div>'
+   +'<div class="art-title">'+art.title+'</div><div class="art-prompt">'+art.prompt+'</div>'
+   +'<div class="art-template">'+art.template+'</div></div>'
+   +'<div class="art-body"><div class="ctx"><div class="ctx-label"><span class="pin"></span>From the agreed Discovery answers</div>'+ctxHtml+'</div>'
+   +'<div class="ans agreed" data-q="'+art.key+'" data-author="agreed">'
+   +'<div class="ans-head"><div class="ans-who"><span class="badge"></span>Drop Shot\u2019s answer <span class="agreed-tag">Both edit</span></div>'
+   +'<div class="ans-stamp" id="stamp-'+art.key+'-agreed"></div></div>'
+   +(canEdit?toolbarHtml(art.key,"agreed"):"")
+   +'<div class="editor" id="ed-'+art.key+'-agreed" contenteditable="'+canEdit+'" data-ph="'+(canEdit?'Write the agreed positioning\u2026':'Awaiting input.')+'"></div>'
+   +(canEdit?'<div class="ans-foot"><span class="hint">Tab = indent \u00b7 Shift+Tab = outdent</span><button class="save-btn" id="save-'+art.key+'-agreed">Save</button></div>':"")
+   +'</div></div>';
+  setTimeout(()=>wirePosBox(art.key),0);
+  return wrap;
+}
+function wirePosBox(artkey){
+  const canEdit=CURRENT.author==="tarek"||CURRENT.author==="karim";if(!canEdit)return;
+  const ed=document.getElementById("ed-"+artkey+"-agreed"),toolbar=document.querySelector('.toolbar[data-for="'+artkey+'-agreed"]'),saveBtn=document.getElementById("save-"+artkey+"-agreed");
+  if(!ed||!toolbar)return;
+  toolbar.querySelectorAll(".tb[data-cmd]").forEach(btn=>{
+    btn.addEventListener("mousedown",e=>e.preventDefault());
+    btn.addEventListener("click",()=>{ed.focus();document.execCommand(btn.dataset.cmd,false,btn.dataset.arg||null);const b=document.getElementById("save-"+artkey+"-agreed");if(b){b.textContent="Save";b.classList.remove("saved");}});
+  });
+  ed.addEventListener("keydown",e=>{if(e.key==="Tab"){e.preventDefault();document.execCommand(e.shiftKey?"outdent":"indent",false,null);}});
+  ed.addEventListener("input",()=>{const b=document.getElementById("save-"+artkey+"-agreed");if(b){b.textContent="Save";b.classList.remove("saved");b.disabled=false;}});
+  saveBtn.addEventListener("click",()=>saveAnswer("positioning",artkey,"agreed"));
+}
+async function loadPositioning(){
+  const{data,error}=await sb.from("brand_strategy_responses").select("question_key,author,content_html,content_text,updated_at").eq("tab","positioning");
+  if(error){toast("Couldn't load Positioning.");return;}
+  POS_RESPONSES={};(data||[]).forEach(r=>{POS_RESPONSES[r.question_key]=POS_RESPONSES[r.question_key]||{};POS_RESPONSES[r.question_key][r.author]=r;});
+  POSITIONING.artifacts.forEach(art=>{
+    const r=POS_RESPONSES[art.key]&&POS_RESPONSES[art.key].agreed,ed=document.getElementById("ed-"+art.key+"-agreed"),stamp=document.getElementById("stamp-"+art.key+"-agreed");
+    if(!ed)return;if(document.activeElement===ed)return;
+    ed.innerHTML=r?r.content_html:"";if(stamp)stamp.textContent=r?"saved "+timeAgo(r.updated_at):"";
+  });
+}
+
+/* ===== PREVIOUS VERSION MODAL ===== */
+function openPrevVersion(){
+  if(!PREV_VERSION)return;const v=PREV_VERSION;
+  $("#modalTitle").textContent="Previous version \u2014 v"+v.version_number;
+  let html='<div style="font-family:\'IBM Plex Mono\',monospace;font-size:11.5px;color:#5b574e;margin-bottom:18px">Synced by '+(v.pushed_by_name||v.pushed_by)+' \u00b7 '+new Date(v.pushed_at).toLocaleString()+'</div>';
+  DISCOVERY.questions.forEach(q=>{
+    const ans=v.snapshot[q.key]&&v.snapshot[q.key].trim();
+    html+='<div class="mv-item"><div class="mv-q">'+q.chip+'</div><div class="mv-title">'+q.title+'</div>'
+      +'<div class="mv-ans '+(ans?"":"empty")+'">'+(ans?ans:"Not answered in this version.")+'</div></div>';
+  });
+  $("#modalBody").innerHTML=html;$("#modal").classList.add("show");
+  $("#modalDownload").onclick=()=>downloadPrevVersion(v);
+}
+function downloadPrevVersion(v){
+  let md="# Drop Shot Coffee \u2014 Positioning, previous version (v"+v.version_number+")\n_Synced by "+(v.pushed_by_name||v.pushed_by)+" \u00b7 "+new Date(v.pushed_at).toLocaleString()+"_\n\n## Agreed Discovery answers (snapshot)\n\n";
+  DISCOVERY.questions.forEach((q,i)=>{const ans=v.snapshot[q.key]?stripHtml(v.snapshot[q.key]):"";md+="### Q"+(i+1)+" \u00b7 "+q.chip+" \u2014 "+q.title+"\n\n"+(ans||"_(not answered)_")+"\n\n";});
+  saveAs(new Blob([md],{type:"text/markdown;charset=utf-8"}),"DSC_Positioning_v"+v.version_number+"_"+stamp()+".md");
+}
+$("#modalClose").addEventListener("click",()=>$("#modal").classList.remove("show"));
+$("#modal").addEventListener("click",e=>{if(e.target.id==="modal")$("#modal").classList.remove("show");});
+
+/* ===== POLLING ===== */
+function startPolling(){
+  if(POLL)clearInterval(POLL);
+  POLL=setInterval(async()=>{
+    if(activeTab==="discovery")loadDiscovery();
+    else if(activeTab==="positioning"){await refreshVersions();loadPositioning();}
+  },6000);
+  document.addEventListener("visibilitychange",()=>{
+    if(document.hidden)return;
+    if(activeTab==="discovery")loadDiscovery();
+    else if(activeTab==="positioning")refreshVersions().then(loadPositioning);
+  });
+}
+
+/* ===== STUB ===== */
+function renderStub(tab){
+  $("#main").innerHTML='<div class="tabhead"><div><div class="label">Phase '+tab.n+' \u00b7 '+tab.label+'</div><h2>'+tab.label+'</h2></div></div>'
+   +'<div class="stub-panel"><div class="ico">\u2726</div><h3>Built after the prior phase is locked</h3><p>'+tab.blurb+'</p>'
+   +'<div class="seq">category \u2192 customer \u2192 competitor \u2192 frame \u2192 difference \u2192 conviction \u2192 sacrifice \u2192 personality</div></div>';
+}
+/* ===== EXPORT ===== */
+function stripHtml(html){const d=document.createElement("div");d.innerHTML=html||"";return d.innerText.trim();}
+function get(store,key,author){return(store[key]&&store[key][author])?store[key][author].content_html:"";}
+function gatherTab(tabKey){
+  if(tabKey==="discovery"){
+    return{title:"Discovery",kind:"discovery",questions:DISCOVERY.questions.map((q,i)=>({n:i+1,chip:q.chip,title:q.title,prompt:q.prompt,
+      tarek:get(RESPONSES,q.key,"tarek"),karim:get(RESPONSES,q.key,"karim"),agreed:get(RESPONSES,q.key,"agreed")}))};
+  }
+  if(tabKey==="positioning"){
+    if(!LATEST_VERSION)return null;
+    return{title:"Positioning",kind:"positioning",version:LATEST_VERSION.version_number,questions:POSITIONING.artifacts.map((a,i)=>({
+      n:i+1,chip:a.chip,title:a.title,prompt:a.prompt,template:a.template,agreed:get(POS_RESPONSES,a.key,"agreed"),
+      ctx:a.ctx.map(qk=>({q:DISCOVERY.questions.find(x=>x.key===qk),html:LATEST_VERSION.snapshot[qk]||""}))}))};
+  }
+  return null;
+}
+function tabToMarkdown(d){
+  let md="# Drop Shot Coffee \u2014 Brand Strategy\n## "+d.title+(d.version?" (v"+d.version+")":"")+"\n\n";
+  d.questions.forEach(q=>{
+    md+="### "+(d.kind==="positioning"?"P":"Q")+q.n+" \u00b7 "+q.chip+"\n**"+q.title+"**\n\n_"+q.prompt+"_\n\n";
+    if(q.template)md+="> Template: "+q.template+"\n\n";
+    if(d.kind==="discovery"){
+      md+="**Tarek:**\n\n"+(stripHtml(q.tarek)||"_(no answer)_")+"\n\n**Karim:**\n\n"+(stripHtml(q.karim)||"_(no answer)_")+"\n\n**Agreed:**\n\n"+(stripHtml(q.agreed)||"_(no answer)_")+"\n\n---\n\n";
+    }else{
+      if(q.ctx&&q.ctx.length){md+="_From agreed discovery:_\n";q.ctx.forEach(c=>{md+="- **"+c.q.chip+":** "+(stripHtml(c.html)||"(not answered)")+"\n";});md+="\n";}
+      md+="**Drop Shot's answer:**\n\n"+(stripHtml(q.agreed)||"_(no answer)_")+"\n\n---\n\n";
+    }
+  });
+  return md;
+}
+function exportMd(d,fn){saveAs(new Blob([tabToMarkdown(d)],{type:"text/markdown;charset=utf-8"}),fn+".md");}
+function richToDocxParas(html,dx){
+  const P=dx.Paragraph,T=dx.TextRun,c=document.createElement("div");c.innerHTML=html||"";const paras=[];
+  function runs(node){const r=[];node.childNodes.forEach(ch=>{
+    if(ch.nodeType===3){if(ch.textContent)r.push(new T({text:ch.textContent}));}
+    else if(ch.nodeType===1){const t=ch.textContent||"",bold=/^(B|STRONG)$/.test(ch.tagName),ital=/^(I|EM)$/.test(ch.tagName),und=/^U$/.test(ch.tagName);
+      if(t)r.push(new T({text:t,bold,italics:ital,underline:und?{}:undefined}));}});
+    return r.length?r:[new T({text:node.textContent||""})];}
+  if(!c.childNodes.length)return[new P({children:[new T({text:"(no answer)",italics:true,color:"888888"})]})];
+  c.childNodes.forEach(node=>{
+    if(node.nodeType===3){if(node.textContent.trim())paras.push(new P({children:[new T({text:node.textContent.trim()})]}));return;}
+    const tag=node.tagName;
+    if(tag==="UL"||tag==="OL")node.querySelectorAll("li").forEach(li=>paras.push(new P({children:runs(li),bullet:{level:0}})));
+    else if(/^H[1-6]$/.test(tag))paras.push(new P({children:[new T({text:node.textContent,bold:true,size:26})],spacing:{before:120,after:60}}));
+    else paras.push(new P({children:runs(node)}));
+  });
+  return paras;
+}
+async function exportDocx(d,fn){
+  const dx=window.docx,Doc=dx.Document,Pk=dx.Packer,P=dx.Paragraph,T=dx.TextRun,BS=dx.BorderStyle,ch=[];
+  ch.push(new P({children:[new T({text:"Drop Shot Coffee",bold:true,size:20,color:"2f5d50"})]}));
+  ch.push(new P({children:[new T({text:d.title+(d.version?" (v"+d.version+")":"")+" \u2014 Brand Strategy",bold:true,size:40,color:"1f3f37"})],spacing:{after:80}}));
+  ch.push(new P({children:[new T({text:"Exported "+new Date().toLocaleString(),italics:true,size:18,color:"888888"})],spacing:{after:240}}));
+  d.questions.forEach(q=>{
+    ch.push(new P({children:[new T({text:(d.kind==="positioning"?"P":"Q")+q.n+" \u00b7 "+q.chip,bold:true,size:20,color:"c75d3c"})],spacing:{before:200,after:30}}));
+    ch.push(new P({children:[new T({text:q.title,bold:true,size:28,color:"1f3f37"})],spacing:{after:20}}));
+    ch.push(new P({children:[new T({text:q.prompt,italics:true,size:20,color:"5b574e"})],spacing:{after:q.template?60:120}}));
+    if(q.template)ch.push(new P({children:[new T({text:q.template,size:18,color:"2f5d50"})],spacing:{after:120}}));
+    if(d.kind==="discovery"){
+      [["Tarek","2f5d50","tarek"],["Karim","c75d3c","karim"],["Agreed","7a6a3f","agreed"]].forEach(p=>{
+        ch.push(new P({children:[new T({text:p[0],bold:true,size:22,color:p[1]})],spacing:{before:90,after:16}}));
+        richToDocxParas(q[p[2]],dx).forEach(x=>ch.push(x));});
+    }else{
+      if(q.ctx&&q.ctx.length){
+        ch.push(new P({children:[new T({text:"From agreed discovery",bold:true,size:18,color:"7a6a3f"})],spacing:{before:80,after:10}}));
+        q.ctx.forEach(c=>ch.push(new P({children:[new T({text:c.q.chip+": ",bold:true,size:18,color:"5b574e"}),new T({text:stripHtml(c.html)||"(not answered)",size:18,color:"5b574e"})],bullet:{level:0}})));
+      }
+      ch.push(new P({children:[new T({text:"Drop Shot's answer",bold:true,size:22,color:"1f3f37"})],spacing:{before:100,after:16}}));
+      richToDocxParas(q.agreed,dx).forEach(x=>ch.push(x));
+    }
+    ch.push(new P({text:"",border:{bottom:{color:"d8cfbf",space:1,style:BS.SINGLE,size:6}},spacing:{before:160,after:160}}));
+  });
+  const blob=await Pk.toBlob(new Doc({sections:[{properties:{},children:ch}]}));saveAs(blob,fn+".docx");
+}
+function povPrint(lbl,col,html){return '<div style="background:#f4efe6;border-left:3px solid '+col+';padding:9px 13px;margin-bottom:7px"><div style="font-size:11px;font-weight:bold;color:'+col+';font-family:Arial;margin-bottom:3px;text-transform:uppercase">'+lbl+'</div><div style="font-size:14px">'+(html||"<i style='color:#999'>No answer</i>")+'</div></div>';}
+function buildPrintable(d){
+  const w=document.createElement("div");w.style.cssText="font-family:Georgia,serif;color:#23211d;padding:40px;max-width:720px";
+  let h='<div style="border-bottom:3px solid #2f5d50;padding-bottom:14px;margin-bottom:24px"><div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#c75d3c;font-family:Arial">Drop Shot Coffee \u00b7 Brand Strategy</div><h1 style="font-size:30px;color:#1f3f37;margin:6px 0 0">'+d.title+(d.version?" (v"+d.version+")":"")+'</h1><div style="font-size:11px;color:#888;font-family:Arial;margin-top:6px">Exported '+new Date().toLocaleString()+'</div></div>';
+  d.questions.forEach(q=>{
+    h+='<div style="margin-bottom:26px;page-break-inside:avoid"><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#c75d3c;font-family:Arial;margin-bottom:4px">'+(d.kind==="positioning"?"P":"Q")+q.n+' \u00b7 '+q.chip+'</div><div style="font-size:19px;color:#1f3f37;font-weight:bold;margin-bottom:4px">'+q.title+'</div><div style="font-size:13px;color:#5b574e;font-style:italic;margin-bottom:'+(q.template?6:12)+'px">'+q.prompt+'</div>';
+    if(q.template)h+='<div style="font-size:12px;color:#2f5d50;font-family:monospace;background:#fff;border:1px dashed #d8cfbf;padding:8px 10px;margin-bottom:12px">'+q.template+'</div>';
+    if(d.kind==="discovery"){h+=povPrint("Tarek","#2f5d50",q.tarek)+povPrint("Karim","#c75d3c",q.karim)+povPrint("Agreed","#7a6a3f",q.agreed);}
+    else{
+      if(q.ctx&&q.ctx.length){h+='<div style="background:#ece4d6;border-radius:8px;padding:10px 12px;margin-bottom:8px"><div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#7a6a3f;font-family:Arial;margin-bottom:5px">From agreed discovery</div>';q.ctx.forEach(c=>h+='<div style="font-size:12px;color:#5b574e;margin-bottom:3px"><b>'+c.q.chip+':</b> '+(stripHtml(c.html)||"(not answered)")+'</div>');h+='</div>';}
+      h+=povPrint("Drop Shot's answer","#1f3f37",q.agreed);
+    }
+    h+='</div>';
+  });
+  w.innerHTML=h;return w;
+}
+function exportPdf(d,fn){
+  html2pdf().set({margin:[12,12,16,12],filename:fn+".pdf",image:{type:"jpeg",quality:.98},html2canvas:{scale:2},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},pagebreak:{mode:["css","legacy"]}}).from(buildPrintable(d)).save();
+}
+function exportTab(tabKey,mode){
+  const d=gatherTab(tabKey);if(!d){toast("Nothing to export here yet.");return;}
+  const fn="DSC_"+d.title.replace(/\s+/g,"_")+(d.version?"_v"+d.version:"")+"_"+stamp();
+  if(mode==="md")exportMd(d,fn);else if(mode==="docx")exportDocx(d,fn);else exportPdf(d,fn);
+  toast("Exporting "+d.title+" (."+mode+")\u2026");
+}
+async function exportEverything(){
+  toast("Exporting everything\u2026");
+  if(!Object.keys(RESPONSES).length)await loadDiscovery();
+  const datas=[gatherTab("discovery")];const pos=gatherTab("positioning");if(pos)datas.push(pos);
+  let md="# Drop Shot Coffee \u2014 Brand Strategy (Full Export)\n_"+new Date().toLocaleString()+"_\n\n";
+  datas.forEach(d=>md+=tabToMarkdown(d)+"\n\n");
+  saveAs(new Blob([md],{type:"text/markdown;charset=utf-8"}),"DSC_Brand_Strategy_ALL_"+stamp()+".md");
+  const dx=window.docx,Doc=dx.Document,Pk=dx.Packer,P=dx.Paragraph,T=dx.TextRun,BS=dx.BorderStyle;
+  const ch=[new P({children:[new T({text:"Drop Shot Coffee \u2014 Brand Strategy",bold:true,size:44,color:"1f3f37"})],spacing:{after:60}}),
+    new P({children:[new T({text:"Full export \u00b7 "+new Date().toLocaleString(),italics:true,size:18,color:"888888"})],spacing:{after:260}})];
+  datas.forEach(d=>{
+    ch.push(new P({children:[new T({text:d.title+(d.version?" (v"+d.version+")":""),bold:true,size:34,color:"2f5d50"})],spacing:{before:200,after:120}}));
+    d.questions.forEach(q=>{
+      ch.push(new P({children:[new T({text:(d.kind==="positioning"?"P":"Q")+q.n+" \u00b7 "+q.chip,bold:true,size:20,color:"c75d3c"})],spacing:{before:160,after:30}}));
+      ch.push(new P({children:[new T({text:q.title,bold:true,size:26,color:"1f3f37"})],spacing:{after:20}}));
+      if(d.kind==="discovery"){
+        [["Tarek","2f5d50","tarek"],["Karim","c75d3c","karim"],["Agreed","7a6a3f","agreed"]].forEach(p=>{
+          ch.push(new P({children:[new T({text:p[0],bold:true,size:22,color:p[1]})],spacing:{before:70,after:14}}));
+          richToDocxParas(q[p[2]],dx).forEach(x=>ch.push(x));});
+      }else{
+        ch.push(new P({children:[new T({text:"Drop Shot's answer",bold:true,size:22,color:"1f3f37"})],spacing:{before:70,after:14}}));
+        richToDocxParas(q.agreed,dx).forEach(x=>ch.push(x));
+      }
+      ch.push(new P({text:"",border:{bottom:{color:"d8cfbf",space:1,style:BS.SINGLE,size:6}},spacing:{before:140,after:140}}));
+    });
+  });
+  const blob=await Pk.toBlob(new Doc({sections:[{properties:{},children:ch}]}));saveAs(blob,"DSC_Brand_Strategy_ALL_"+stamp()+".docx");
+}
+
+/* ===== UTIL ===== */
+function stamp(){return new Date().toISOString().slice(0,10).replace(/-/g,"");}
+function timeAgo(iso){if(!iso)return"";const s=Math.floor((Date.now()-new Date(iso))/1000);if(s<60)return"just now";if(s<3600)return Math.floor(s/60)+"m ago";if(s<86400)return Math.floor(s/3600)+"h ago";return new Date(iso).toLocaleDateString();}
+let toastT=null;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2600);}
+</script>
+</body>
+</html>
